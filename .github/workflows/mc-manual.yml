@@ -48,6 +48,4 @@ jobs:
           echo "---------------------------||---------------------------"
           echo "---------------------------||---------------------------"
           echo "---------------------------||---------------------------"
-#          chmod +x update_version.sh
-#          ./update_version.sh kotlin_feature_location/build.gradle.kts 0.0.1-beta ${{ steps.setup.outputs.release_name }}
           ./gradlew :kotlin_feature_location:publishMavenPublicationToMavenCentralRepository
