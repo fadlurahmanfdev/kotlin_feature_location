@@ -34,6 +34,7 @@ class FeatureLocation(private val context: Context) {
 
     /**
      * Checks if the [android.Manifest.permission.ACCESS_FINE_LOCATION] permission is granted.
+     * For more approximate location data, consider using [isCoarseLocationPermissionGranted]
      * @see isCoarseLocationPermissionGranted
      */
     fun isFineLocationPermissionGranted(): Boolean {
@@ -45,7 +46,7 @@ class FeatureLocation(private val context: Context) {
 
     /**
      * Checks if the [android.Manifest.permission.ACCESS_COARSE_LOCATION] permission is granted.
-     * For more precise location data, consider using isFineLocationEnabled.
+     * For more precise location data, consider using [isFineLocationPermissionGranted].
      * @see isFineLocationPermissionGranted
      */
     fun isCoarseLocationPermissionGranted(): Boolean {

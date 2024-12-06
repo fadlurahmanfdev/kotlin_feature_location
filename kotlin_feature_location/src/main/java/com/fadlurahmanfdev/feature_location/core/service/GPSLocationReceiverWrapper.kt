@@ -6,6 +6,9 @@ import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
 
+/**
+ * Helper class for implement & listen GPS Location Changed
+ * */
 class GPSLocationReceiverWrapper(private val activity: Activity) {
     private var listener: Listener? = null
     private val receiver = object : GPSLocationReceiver() {
@@ -14,7 +17,10 @@ class GPSLocationReceiverWrapper(private val activity: Activity) {
         }
     }
 
-    fun registerReceiver(listener: Listener) {
+    /**
+     * Register the listener of GPS Location Changes.
+     * */
+    fun addGPSChangeListener(listener: Listener) {
         this.listener = listener
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             activity.registerReceiver(
@@ -28,7 +34,8 @@ class GPSLocationReceiverWrapper(private val activity: Activity) {
         Log.i(this::class.java.simpleName, "successfully register receiver ${this::class.java.simpleName}")
     }
 
-    fun unRegisterReceiver() {
+
+    fun removeGPSChangeListener() {
         this.listener = null
         activity.unregisterReceiver(receiver)
         Log.i(this::class.java.simpleName, "successfully unregister receiver ${this::class.java.simpleName}")
