@@ -228,7 +228,7 @@ class LocationActivity : AppCompatActivity(), ListExampleAdapter.Callback {
             }
 
             "LISTEN_GPS_LOCATION_SERVICE" -> {
-                gpsLocationReceiverWrapper.registerReceiver(object :
+                gpsLocationReceiverWrapper.addGPSChangeListener(object :
                     GPSLocationReceiverWrapper.Listener {
                     override fun isGpsLocationEnabled(gpsLocationEnabled: Boolean) {
                         Log.d(
@@ -240,7 +240,7 @@ class LocationActivity : AppCompatActivity(), ListExampleAdapter.Callback {
             }
 
             "REMOVE_LISTEN_GPS_LOCATION_SERVICE" -> {
-                gpsLocationReceiverWrapper.unRegisterReceiver()
+                gpsLocationReceiverWrapper.removeGPSChangeListener()
             }
 
             "GET_COORDINATE" -> {

@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import com.fadlurahmanfdev.feature_location.FeatureLocation
 
+/**
+ * Class for listening whether GOS Location is changed
+ * */
 abstract class GPSLocationReceiver(private val location: FeatureLocation? = null) : BroadcastReceiver() {
     private var gpsLocationEnabled: Boolean? = null
     lateinit var featureLocation: FeatureLocation
