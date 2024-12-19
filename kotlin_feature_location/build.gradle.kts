@@ -67,7 +67,7 @@ mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
 
-    coordinates("com.fadlurahmanfdev", "feature_location", "0.0.1")
+    coordinates("com.fadlurahmanfdev", "feature_location", "0.1.0")
 
     pom {
         name.set("Feature Remote Location")
