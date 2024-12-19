@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Address
+import android.location.Criteria
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
@@ -14,16 +15,18 @@ import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import com.fadlurahmanfdev.feature_location.core.constant.ErrorFeatureLocationConstant
 import com.fadlurahmanfdev.feature_location.core.exception.FeatureLocationException
+import com.fadlurahmanfdev.feature_location.core.service.GPSLocationReceiver
+import com.fadlurahmanfdev.feature_location.core.service.GPSLocationReceiverWrapper
 import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.TaskCompletionSource
 import java.util.Locale
-import com.fadlurahmanfdev.feature_location.core.service.GPSLocationReceiver
-import com.fadlurahmanfdev.feature_location.core.service.GPSLocationReceiverWrapper
 
 class FeatureLocation(private val context: Context) {
     private val locationManager =
@@ -113,17 +116,23 @@ class FeatureLocation(private val context: Context) {
      * see [getCurrentLocation] for real time location.
      * @see getCurrentLocation
      */
-    fun getLastKnownLocation(): Task<Location> {
+    fun getLastKnownLocation(): Task<Location?> {
         return getLastKnownLocation(fusedLocationProviderClient)
     }
 
-//    fun getLastKnownLocation(activity: Activity): Task<Location> {
-//        val client = LocationServices.getFusedLocationProviderClient(activity)
-//        return getLastKnownLocation(client)
-//    }
+    fun getLastKnownLocation(activity: Activity): Task<Location?> {
+        val client = LocationServices.getFusedLocationProviderClient(activity)
+        return getLastKnownLocation(client)
+    }
 
-    private fun getLastKnownLocation(client: FusedLocationProviderClient): Task<Location> {
-        return client.lastLocation
+    private fun getLastKnownLocation(client: FusedLocationProviderClient): Task<Location?> {
+        val taskCompletionSource = TaskCompletionSource<Location?>()
+        client.lastLocation.addOnSuccessListener { location ->
+            taskCompletionSource.setResult(location)
+        }.addOnFailureListener { exception ->
+            taskCompletionSource.setException(exception)
+        }
+        return taskCompletionSource.task
     }
 
     /**
@@ -137,20 +146,44 @@ class FeatureLocation(private val context: Context) {
         return getCurrentLocation(fusedLocationProviderClient, priority = priority)
     }
 
-//    fun getCurrentLocation(
-//        activity: Activity,
-//        priority: Int = Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-//    ): Task<Location> {
-//        val client: FusedLocationProviderClient =
-//            LocationServices.getFusedLocationProviderClient(activity)
-//        return getCurrentLocation(client, priority = priority)
-//    }
+    fun getCurrentLocation(
+        activity: Activity,
+        priority: Int = Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+    ): Task<Location> {
+        val client: FusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(activity)
+        return getCurrentLocation(client, priority = priority)
+    }
 
     private fun getCurrentLocation(
         client: FusedLocationProviderClient,
+        durationMillis: Long = 60000,
         priority: Int = Priority.PRIORITY_BALANCED_POWER_ACCURACY,
     ): Task<Location> {
-        return client.getCurrentLocation(priority, null)
+        try {
+            val bestProvider = locationManager.getBestProvider(Criteria(), true)
+            Log.d(this@FeatureLocation::class.java.simpleName, "best provider: $bestProvider")
+            locationManager.requestLocationUpdates(
+                bestProvider!!,
+                5000,
+                10f
+            ) { _ ->
+                Log.d(this@FeatureLocation::class.java.simpleName, "success update location")
+            }
+        } catch (e: Throwable) {
+            Log.w(this::class.java.simpleName, "failed request location update: ${e.message}")
+        }
+
+        val taskCompletionSource = TaskCompletionSource<Location>()
+        client.getCurrentLocation(
+            CurrentLocationRequest.Builder()
+                .setDurationMillis(durationMillis)
+                .setPriority(priority)
+                .build(), null
+        ).addOnSuccessListener { location ->
+            taskCompletionSource.setResult(location)
+        }
+        return taskCompletionSource.task
     }
 
     /**
@@ -162,13 +195,6 @@ class FeatureLocation(private val context: Context) {
         maxResult: Int = 1,
         callback: RequestAddressCallback
     ) {
-        assert(maxResult in 1..5)
-
-        var currentMaxResult = 1
-        if (maxResult > 5 || maxResult < 1) {
-            currentMaxResult = 1
-        }
-
         getCurrentLocation()
             .addOnFailureListener {
                 callback.onFailedGetAddress(
@@ -178,14 +204,19 @@ class FeatureLocation(private val context: Context) {
                     )
                 )
             }
-            .addOnCompleteListener { location ->
-                getAddressesByCoordinate(
-                    latitude = location.result.latitude,
-                    longitude = location.result.longitude,
-                    maxResult = currentMaxResult,
-                    callback = callback
-                )
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    getAddressesByCoordinate(
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        maxResult = maxResult,
+                        callback = callback
+                    )
+                } else {
+                    callback.onFailedGetLocation()
+                }
             }
+            .addOnCompleteListener { _ -> }
     }
 
     /**
@@ -199,22 +230,15 @@ class FeatureLocation(private val context: Context) {
         maxResult: Int = 1,
         callback: RequestAddressCallback
     ) {
-        assert(maxResult in 1..5)
-
-        var currentMaxResult = 1
-        if (maxResult > 5 || maxResult < 1) {
-            currentMaxResult = 1
-        }
-
         try {
             val geoCoder = Geocoder(context, Locale.getDefault())
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                geoCoder.getFromLocation(latitude, longitude, currentMaxResult) { addresses ->
+                geoCoder.getFromLocation(latitude, longitude, maxResult) { addresses ->
                     callback.onGetAddress(addresses)
                 }
             } else {
                 val addresses =
-                    geoCoder.getFromLocation(latitude, longitude, currentMaxResult) ?: listOf()
+                    geoCoder.getFromLocation(latitude, longitude, maxResult) ?: listOf()
                 callback.onGetAddress(addresses)
             }
         } catch (e: Throwable) {
@@ -235,6 +259,7 @@ class FeatureLocation(private val context: Context) {
 
     interface RequestAddressCallback {
         fun onGetAddress(addresses: List<Address>)
+        fun onFailedGetLocation()
         fun onFailedGetAddress(exception: FeatureLocationException)
     }
 }
