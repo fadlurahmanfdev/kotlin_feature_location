@@ -59,4 +59,4 @@ jobs:
           echo "---------------------------||---------------------------"
           echo "---------------------------||---------------------------"
           echo "---------------------------||---------------------------"
-          ./gradlew :kotlin_feature_location:publishMavenPublicationToMavenCentralRepository
+          ./gradlew :locx:publishMavenPublicationToMavenCentralRepository
