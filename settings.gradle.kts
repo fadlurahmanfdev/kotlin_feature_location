@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Kotlin Feature Location"
 include(":app")
-include(":kotlin_feature_location")
+include(":locx")

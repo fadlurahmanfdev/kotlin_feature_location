@@ -26,7 +26,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name="com.fadlurahmanfdev.feature_location.core.service.GPSLocationReceiver" android:exported="false">
+        <receiver android:name="com.fadlurahmanfdev.locx.core.service.LocXGPSLocationReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PROVIDER_CHANGED"/>
             </intent-filter>
