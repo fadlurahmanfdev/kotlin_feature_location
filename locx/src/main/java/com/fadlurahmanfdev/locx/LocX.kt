@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.CancellationSignal
 import android.util.Log
 import androidx.activity.result.IntentSenderRequest
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import androidx.core.util.Consumer
@@ -217,6 +218,30 @@ class LocX(private val context: Context) {
         }
     }
 
+    fun getAddressesByLocationName(
+        locationName: String,
+        maxResult: Int = 1,
+    ): List<Address>? {
+        return geoCoder.getFromLocationName(
+            locationName,
+            maxResult,
+        )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun getAddressesByLocationName(
+        locationName: String,
+        maxResult: Int = 1,
+        geoCodeListener: GeoCodeListener
+    ) {
+        return geoCoder.getFromLocationName(
+            locationName,
+            maxResult
+        ) { p0 ->
+            geoCodeListener.onGetAddress(p0)
+        }
+    }
+
     private var gpsLocationServiceListener: GPSLocationServiceListener? = null
     private var activity: Activity? = null
     private val gpsLocationReceiver = object : LocXGPSLocationReceiver() {
@@ -267,5 +292,9 @@ class LocX(private val context: Context) {
     interface RequestAddressCallback {
         fun onGetAddress(addresses: List<Address>)
         fun onFailedGetAddress(exception: LocXException)
+    }
+
+    interface GeoCodeListener {
+        fun onGetAddress(addresses: List<Address>)
     }
 }
