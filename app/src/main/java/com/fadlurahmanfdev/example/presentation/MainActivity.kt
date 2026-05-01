@@ -2,6 +2,7 @@ package com.fadlurahmanfdev.example.presentation
 
 import android.location.Address
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.CancellationSignal
 import android.util.Log
@@ -27,8 +28,6 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 
 class MainActivity : AppCompatActivity(), ListExampleAdapter.Callback {
-
-    lateinit var viewModel: MainViewModel
     lateinit var locX: LocX
 
     private val features: List<FeatureModel> = listOf<FeatureModel>(
@@ -110,6 +109,18 @@ class MainActivity : AppCompatActivity(), ListExampleAdapter.Callback {
             desc = "Get Address",
             enum = "GET_ADDRESS"
         ),
+        FeatureModel(
+            featureIcon = R.drawable.baseline_developer_mode_24,
+            title = "Get Addresses From Location Name Synchronous",
+            desc = "Get Addresses From Location Name Synchronous",
+            enum = "GET_ADDRESSES_FROM_LOCATION_NAME_SYNCHRONOUS"
+        ),
+        FeatureModel(
+            featureIcon = R.drawable.baseline_developer_mode_24,
+            title = "Get Addresses From Location Name Asynchronous",
+            desc = "Get Addresses From Location Name Asynchronous",
+            enum = "GET_ADDRESSES_FROM_LOCATION_NAME_ASYNCHRONOUS"
+        ),
     )
 
     private lateinit var rv: RecyclerView
@@ -127,21 +138,11 @@ class MainActivity : AppCompatActivity(), ListExampleAdapter.Callback {
         rv = findViewById<RecyclerView>(R.id.rv)
         locX = LocX(this)
 
-//        viewModel = MainViewModel(
-//            exampleCorePlatformUseCase = ExampleCorePlatformUseCaseImpl(
-//                platformRepository = CorePlatformLocationRepositoryImpl(
-//                    applicationContext,
-//                )
-//            )
-//        )
-
         rv.setItemViewCacheSize(features.size)
-        rv.setHasFixedSize(true)
 
         adapter = ListExampleAdapter()
         adapter.setCallback(this)
         adapter.setList(features)
-        adapter.setHasStableIds(true)
         rv.adapter = adapter
     }
 
@@ -382,6 +383,43 @@ class MainActivity : AppCompatActivity(), ListExampleAdapter.Callback {
                     Log.d(
                         this::class.java.simpleName,
                         "App-LocX-LOG %%% - completed get current location"
+                    )
+                }
+            }
+
+            "GET_ADDRESSES_FROM_LOCATION_NAME_SYNCHRONOUS" -> {
+                val addresses = locX.getAddressesByLocationName("Jakarta", 1)
+                Log.d(
+                    this::class.java.simpleName,
+                    "App-LocX-LOG %%% - Total Address Found: ${addresses?.size}"
+                )
+                addresses?.forEach { address ->
+                    Log.d(
+                        this::class.java.simpleName,
+                        "App-LocX-LOG %%% - address: $address"
+                    )
+                }
+            }
+
+            "GET_ADDRESSES_FROM_LOCATION_NAME_ASYNCHRONOUS" -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    locX.getAddressesByLocationName(
+                        "Jakarta", 1,
+                        object : LocX.GeoCodeListener {
+                            override fun onGetAddress(addresses: List<Address>) {
+                                Log.d(
+                                    this::class.java.simpleName,
+                                    "App-LocX-LOG %%% - Total Address Found: ${addresses.size}"
+                                )
+                                addresses.forEach { address ->
+                                    Log.d(
+                                        this::class.java.simpleName,
+                                        "App-LocX-LOG %%% - address: $address"
+                                    )
+                                }
+                            }
+
+                        },
                     )
                 }
             }
