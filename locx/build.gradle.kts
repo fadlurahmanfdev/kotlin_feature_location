@@ -54,7 +54,7 @@ publishing {
         register<MavenPublication>("release"){
             groupId = "co.id.fadlurahmanfdev"
             artifactId = "kotlin_core_platform"
-            version = "0.0.5"
+            version = "0.0.2"
 
             afterEvaluate {
                 from(components["release"])
@@ -67,7 +67,7 @@ mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
 
-    coordinates("com.fadlurahmanfdev", "locx", "0.0.5")
+    coordinates("com.fadlurahmanfdev", "locx", "0.0.2")
 
     pom {
         name.set("LocX")
