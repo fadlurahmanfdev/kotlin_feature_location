@@ -30,4 +30,3 @@ jobs:
         continue-on-error: true
         with:
           args: --verbose https://jitpack.io/com/github/fadlurahmanfdev/kotlin_feature_location/${{ github.ref_name }}/kotlin_feature_location-${{ github.ref_name }}.pom
-          

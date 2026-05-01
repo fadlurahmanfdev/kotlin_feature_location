@@ -23,15 +23,6 @@ jobs:
           echo "TAG VERSION: ${{ github.ref_name }}"
           echo "RELEASE NAME: ${GITHUB_REF#refs/tags/v}"
           echo "::set-output name=release_name::${GITHUB_REF#refs/tags/v}"
-      - name: Create Release From TAG
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: ${{ steps.setup.outputs.release_name }}
-          draft: false
-          prerelease: false
       - name: Setup Maven Central and GPG Key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --dearmor > secret_key.gpg
@@ -60,3 +51,12 @@ jobs:
           echo "---------------------------||---------------------------"
           echo "---------------------------||---------------------------"
           ./gradlew :locx:publishMavenPublicationToMavenCentralRepository
+      - name: Create Release From TAG
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ steps.setup.outputs.release_name }}
+          draft: false
+          prerelease: false
