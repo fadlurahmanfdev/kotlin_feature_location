@@ -52,8 +52,8 @@ dependencies {
 publishing {
     publications {
         register<MavenPublication>("release"){
-            groupId = "co.id.fadlurahmanfdev"
-            artifactId = "kotlin_core_platform"
+            groupId = "com.fadlurahmanfdev"
+            artifactId = "kotlin_feature_location"
             version = "0.0.2"
 
             afterEvaluate {
